@@ -1,0 +1,8 @@
+{
+  "identifier": "waveform",
+  "description": "Capabilities for the waveform visualizer overlay window",
+  "windows": ["waveform"],
+  "permissions": [
+    "core:default"
+  ]
+}

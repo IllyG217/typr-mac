@@ -1,0 +1,22 @@
+# Node
+node_modules/
+dist/
+
+# Rust / Tauri build output
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Whisper model files (large — downloaded at runtime)
+*.bin
+*.gguf
+
+# macOS
+.DS_Store
+*.swp
+
+# Internal tooling
+docs/
+.vscode/
+
+# Logs
+src-tauri/*.log

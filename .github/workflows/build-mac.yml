@@ -1,0 +1,66 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        # Build for both Apple Silicon and Intel in one run
+        target: [aarch64-apple-darwin, x86_64-apple-darwin]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # ── Whisper-cpp sidecar ────────────────────────────────────────────────
+      # The whisper-cpp binary must be compiled for the target architecture.
+      # We build it from source here. Alternatively, drop a pre-compiled binary
+      # named  binaries/whisper-cpp-<target>  and remove this step.
+      - name: Build whisper-cpp sidecar
+        run: |
+          git clone --depth 1 https://github.com/ggerganov/whisper.cpp whisper-src
+          cd whisper-src
+          if [[ "${{ matrix.target }}" == "aarch64-apple-darwin" ]]; then
+            cmake -B build -DCMAKE_OSX_ARCHITECTURES=arm64 -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_EXAMPLES=OFF
+          else
+            cmake -B build -DCMAKE_OSX_ARCHITECTURES=x86_64 -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_EXAMPLES=OFF
+          fi
+          cmake --build build --config Release -j$(sysctl -n hw.logicalcpu)
+          mkdir -p ../src-tauri/binaries
+          cp build/bin/whisper-cli ../src-tauri/binaries/whisper-cpp-${{ matrix.target }}
+          chmod +x ../src-tauri/binaries/whisper-cpp-${{ matrix.target }}
+          cd ..
+          rm -rf whisper-src
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: --target ${{ matrix.target }}
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: Typr-macOS-${{ matrix.target }}
+          path: |
+            src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg

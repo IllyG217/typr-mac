@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Typr",
+  "version": "0.1.4",
+  "identifier": "com.typr.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Typr Settings",
+        "width": 900,
+        "height": 600,
+        "minWidth": 700,
+        "minHeight": 500,
+        "resizable": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "visible": false,
+        "skipTaskbar": true
+      },
+      {
+        "label": "waveform",
+        "url": "src/waveform.html",
+        "title": "Typr",
+        "width": 320,
+        "height": 90,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "visible": false,
+        "skipTaskbar": true,
+        "resizable": false,
+        "focus": false,
+        "shadow": false
+      }
+    ],
+    "macOSPrivateApi": true,
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["dmg", "app"],
+    "category": "Productivity",
+    "copyright": "Copyright © 2026 Typr Contributors",
+    "shortDescription": "Global hotkey dictation with local and cloud transcription",
+    "longDescription": "Typr is a minimal dictation app that transcribes your voice and pastes the text wherever your cursor is. Press a global hotkey, speak, and the result appears instantly. Supports on-device transcription via whisper.cpp or fast cloud transcription via Groq. No accounts required.",
+    "externalBin": ["binaries/whisper-cpp"],
+    "resources": {
+      "icons/tray-idle.png": "icons/tray-idle.png",
+      "icons/tray-recording.png": "icons/tray-recording.png",
+      "icons/tray-transcribing.png": "icons/tray-transcribing.png"
+    },
+    "macOS": {
+      "entitlements": "entitlements.plist",
+      "exceptionDomain": "",
+      "frameworks": [],
+      "minimumSystemVersion": "11.0",
+      "signingIdentity": null
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

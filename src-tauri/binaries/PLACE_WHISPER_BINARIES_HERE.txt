@@ -1,0 +1,9 @@
+Place the whisper-cpp binaries for macOS here before building.
+
+Tauri expects these exact filenames:
+  whisper-cpp-aarch64-apple-darwin      (Apple Silicon — M1, M2, M3, M4)
+  whisper-cpp-x86_64-apple-darwin       (Intel Mac)
+
+The GitHub Actions workflow (../.github/workflows/build-mac.yml) builds
+these automatically from source. If building manually on a Mac, see the
+README.md for step-by-step instructions.

@@ -1,0 +1,23 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:tray:default",
+    "global-shortcut:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/whisper-cpp",
+          "sidecar": true,
+          "args": true
+        }
+      ]
+    }
+  ]
+}
