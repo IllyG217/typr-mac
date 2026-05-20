@@ -8,11 +8,17 @@ on:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
     strategy:
       matrix:
-        # Build for both Apple Silicon and Intel in one run
-        target: [aarch64-apple-darwin, x86_64-apple-darwin]
+        include:
+          # Apple Silicon (M1/M2/M3/M4) — runs on arm64 runner natively
+          - target: aarch64-apple-darwin
+            runner: macos-latest
+          # Intel Mac — runs on x86_64 runner natively (macos-13 is the last Intel runner)
+          - target: x86_64-apple-darwin
+            runner: macos-13
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - uses: actions/checkout@v4
@@ -32,18 +38,18 @@ jobs:
         run: npm ci
 
       # ── Whisper-cpp sidecar ────────────────────────────────────────────────
-      # The whisper-cpp binary must be compiled for the target architecture.
-      # We build it from source here. Alternatively, drop a pre-compiled binary
-      # named  binaries/whisper-cpp-<target>  and remove this step.
+      # Built natively on each runner — no cross-compilation needed.
+      # The binary is named exactly as Tauri expects:
+      #   binaries/whisper-cpp-aarch64-apple-darwin
+      #   binaries/whisper-cpp-x86_64-apple-darwin
       - name: Build whisper-cpp sidecar
         run: |
           git clone --depth 1 https://github.com/ggerganov/whisper.cpp whisper-src
           cd whisper-src
-          if [[ "${{ matrix.target }}" == "aarch64-apple-darwin" ]]; then
-            cmake -B build -DCMAKE_OSX_ARCHITECTURES=arm64 -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_EXAMPLES=OFF
-          else
-            cmake -B build -DCMAKE_OSX_ARCHITECTURES=x86_64 -DWHISPER_BUILD_TESTS=OFF -DWHISPER_BUILD_EXAMPLES=OFF
-          fi
+          cmake -B build \
+            -DWHISPER_BUILD_TESTS=OFF \
+            -DWHISPER_BUILD_EXAMPLES=OFF \
+            -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release -j$(sysctl -n hw.logicalcpu)
           mkdir -p ../src-tauri/binaries
           cp build/bin/whisper-cli ../src-tauri/binaries/whisper-cpp-${{ matrix.target }}
@@ -62,5 +68,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Typr-macOS-${{ matrix.target }}
-          path: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
