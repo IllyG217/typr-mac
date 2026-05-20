@@ -46,13 +46,21 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/ggerganov/whisper.cpp whisper-src
           cd whisper-src
+          # Note: do NOT disable examples — whisper-cli is an example target
           cmake -B build \
             -DWHISPER_BUILD_TESTS=OFF \
-            -DWHISPER_BUILD_EXAMPLES=OFF \
             -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release -j$(sysctl -n hw.logicalcpu)
+          # Locate the CLI binary — name varies across whisper.cpp versions
+          BINARY=$(find build/bin -type f \( -name "whisper-cli" -o -name "main" \) 2>/dev/null | head -1)
+          if [ -z "$BINARY" ]; then
+            echo "ERROR: could not find whisper CLI binary. Available files:"
+            find build -type f -perm +111 | head -30
+            exit 1
+          fi
+          echo "Found whisper binary: $BINARY"
           mkdir -p ../src-tauri/binaries
-          cp build/bin/whisper-cli ../src-tauri/binaries/whisper-cpp-${{ matrix.target }}
+          cp "$BINARY" ../src-tauri/binaries/whisper-cpp-${{ matrix.target }}
           chmod +x ../src-tauri/binaries/whisper-cpp-${{ matrix.target }}
           cd ..
           rm -rf whisper-src
